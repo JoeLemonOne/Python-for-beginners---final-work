@@ -137,23 +137,49 @@ def Page_to_Characteristics(el):
 # Базовый адрес
 url = 'https://www.muztorg.ru'
 
-# 1. Забираем главную страницу с сайта и записываем в файл, чтобы не делать запросы на сайт
-html = URL_to_Soup(url)
-with open('data/homepage.html', 'w', encoding='UTF-8') as file:
-    file.write(html.text)
-    file.close()
+# # 1. Забираем главную страницу с сайта и записываем в файл, чтобы не делать запросы на сайт
+# html = URL_to_Soup(url)
+# with open('data/homepage.html', 'w', encoding='UTF-8') as file:
+#     file.write(html.text)
+#     file.close()
 
-# 2. Работаем с сохранённой страницей
-with open('data/homepage.html', encoding='UTF-8') as file:
-    html = file.read()
-    file.close()
-soup = bs4.BeautifulSoup(html, 'lxml')
-list_soup_category = soup.find_all('div', class_='catalog-menu__i')
+# # 2. Работаем с сохранённой страницей
+# with open('data/homepage.html', encoding='UTF-8') as file:
+#     html = file.read()
+#     file.close()
+# soup = bs4.BeautifulSoup(html, 'lxml')
+# list_soup_category = soup.find_all('div', class_='catalog-menu__i')
 
-# 3. Формируем список ссылок на категории товаров, имеющиеся на сайте
-categories_list = []
-for category in list_soup_category:
-    list_sub_category = category.find_all('div', class_='catalog-menu__category')
-    for sub_category in list_sub_category:
-        # print(sub_category.find('a').get('href'))
-        categories_list.append(url + sub_category.find('a').get('href'))
+# # 3. Формируем список ссылок на категории товаров, имеющиеся на сайте
+# categories_list = []
+# for category in list_soup_category:
+#     list_sub_category = category.find_all('div', class_='catalog-menu__category')
+#     for sub_category in list_sub_category:
+#         # print(sub_category.find('a').get('href'))
+#         categories_list.append(url + sub_category.find('a').get('href'))
+
+# 4. Формируем список артикулов товаров по категориям, записываем артикулы каждой категории в отдельный файл
+for cat in range(1, len(categories_list)):
+    category = categories_list[cat-1]
+    soup = URL_to_Soup(category)
+    category_name ='0'*(3-len(str(cat))) + str(cat) +  '_' + soup.find('h1').text.strip().replace('/', 'и')
+    print(category_name)
+    try:
+        pages = int(soup.find('span', class_='category-head__badge').text)
+    except AttributeError:
+        pages = 1
+    if pages % 24 == 0:
+        pages = int(pages/24)
+    else:
+        pages = int(pages/24) + 1
+    product_info = []
+    for page in range(1, pages + 1):
+        url = category + '?in-stock=1&pre-order=1&page=' + str(page)
+        soup = URL_to_Soup(url)
+        product_card_list = soup.find_all('a', itemprop="image")
+        for page in product_card_list:
+            product_info.append(page.get('href').replace('/product/',''))
+    with open(os.getcwd() + '\\list\\' + f'{category_name}.txt', 'w', encoding='UTF-8') as file:
+        for i in product_info:
+            file.write(i + '\n')
+        file.close()
