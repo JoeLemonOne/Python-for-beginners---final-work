@@ -138,7 +138,22 @@ def Page_to_Characteristics(el):
 url = 'https://www.muztorg.ru'
 
 # 1. Забираем главную страницу с сайта и записываем в файл, чтобы не делать запросы на сайт
-# html = URL_to_Soup(url)
-# with open('data/homepage.html', 'w', encoding='UTF-8') as file:
-#     file.write(html.text)
-#     file.close()
+html = URL_to_Soup(url)
+with open('data/homepage.html', 'w', encoding='UTF-8') as file:
+    file.write(html.text)
+    file.close()
+
+# 2. Работаем с сохранённой страницей
+with open('data/homepage.html', encoding='UTF-8') as file:
+    html = file.read()
+    file.close()
+soup = bs4.BeautifulSoup(html, 'lxml')
+list_soup_category = soup.find_all('div', class_='catalog-menu__i')
+
+# 3. Формируем список ссылок на категории товаров, имеющиеся на сайте
+categories_list = []
+for category in list_soup_category:
+    list_sub_category = category.find_all('div', class_='catalog-menu__category')
+    for sub_category in list_sub_category:
+        # print(sub_category.find('a').get('href'))
+        categories_list.append(url + sub_category.find('a').get('href'))
