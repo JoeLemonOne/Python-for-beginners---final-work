@@ -13,16 +13,14 @@ def URL_to_Soup(url):
     }
     # Добавляем условие на случай TimeoutError
     try:
-        html = requests.get(url, headers=headers)
+        return bs4.BeautifulSoup(requests.get(url, headers=headers).content, 'lxml')
     except:
         t = 15
         for i in range(1,t+1):
             time.sleep(1)
             os.system('cls')
             print(f'Timeout {t + 1 - i} s')
-        URL_to_Soup(url)
-
-    return bs4.BeautifulSoup(html.content, 'lxml')
+        return URL_to_Soup(url)
 
 def Page_to_Characteristics(el):
     # time.sleep(random.randint(1, 2))
@@ -184,42 +182,66 @@ url = 'https://www.muztorg.ru'
 #             file.write(i + '\n')
 #         file.close()
 
-# 5. Перебираем артикулы, формируем JSON-файлы с карточками товаров
-base_path = os.getcwd() + '\\list\\'
-count = 0
+# # 5. Перебираем артикулы, формируем JSON-файлы с карточками товаров
+# base_path = os.getcwd() + '\\list\\'
+# count = 0
+#
+# for file_data in os.listdir(base_path):
+#     with open(base_path + file_data, encoding='UTF-8') as file:
+#         list_vendors = file.read()
+#         file.close()
+#     count += len(list_vendors)
+# count_n = count - 1
+#
+# start = int(time.time())
+#
+# for file_data in os.listdir(base_path):
+#     with open(base_path + file_data, encoding='UTF-8') as file:
+#         list_vendors = file.read().splitlines()
+#         count_product_cat = len(list_vendors)
+#         count_product_cat_n = count_product_cat
+#         file.close()
+#     product_info = []
+#     for el in list_vendors:
+#         characteristics = Page_to_Characteristics(el)
+#         site = 'https://www.muztorg.ru/product/'
+#         time_off = int(time.time()) - start
+#         time_out = int((time_off*count/(count-count_n) - time_off)/60)
+#         # Очищаем терминал и выводим сервисное сообщение о исследуемом товаре, остатке товаров и
+#         os.system('cls')
+#         print(f'Товар {site + el} обработан, осталось {count_n} товаров из {count}, '
+#               f'{count_product_cat_n} из {count_product_cat} в разделе {file_data.replace(".txt","")}. '
+#               f'Осталось времени: {time_out} мин.')
+#         count_n -= 1
+#         count_product_cat_n -= 1
+#         if characteristics != None:
+#             product_info.append(characteristics)
+#     # Дополнение JSON файла с данными
+#     name_file = file_data.replace('.txt', '')
+#     with open(f'JSON/{name_file}.json', 'w', encoding='UTF-8') as file:
+#         json.dump(product_info, file, indent=4, ensure_ascii=False)
+#     os.rename(os.getcwd() + '\\list\\' + file_data, os.getcwd() + '\\list_complete\\' + file_data)
 
-for file_data in os.listdir(base_path):
-    with open(base_path + file_data, encoding='UTF-8') as file:
-        list_vendors = file.read()
-        file.close()
-    count += len(list_vendors)
-count_n = count - 1
+# 6
+base_path = os.getcwd() + '\\JSON\\'
+#print(os.listdir(base_path))
+characteristics = []
 
-start = int(time.time())
+for product_dir in os.listdir(base_path):
+    base, ext = os.path.splitext(product_dir)
+    if ext == '.json':
+        with open(base_path + product_dir, 'r', encoding='UTF-8') as file_load:
+            try:
+                j = json.load(file_load)
+            except:
+                print(product_dir, Exception)
+        #print('======================================')
+        #pprint(j)
+        print(product_dir,len(j))
+        for el in j:
+            characteristics.append(el)
+#pprint(characteristics)
 
-for file_data in os.listdir(base_path):
-    with open(base_path + file_data, encoding='UTF-8') as file:
-        list_vendors = file.read().splitlines()
-        count_product_cat = len(list_vendors)
-        count_product_cat_n = count_product_cat
-        file.close()
-    product_info = []
-    for el in list_vendors:
-        characteristics = Page_to_Characteristics(el)
-        site = 'https://www.muztorg.ru/product/'
-        time_off = int(time.time()) - start
-        time_out = int((time_off*count/(count-count_n) - time_off)/60)
-        # Очищаем терминал и выводим сервисное сообщение о исследуемом товаре, остатке товаров и
-        os.system('cls')
-        print(f'Товар {site + el} обработан, осталось {count_n} товаров из {count}, '
-              f'{count_product_cat_n} из {count_product_cat} в разделе {file_data.replace(".txt","")}. '
-              f'Осталось времени: {time_out} мин.')
-        count_n -= 1
-        count_product_cat_n -= 1
-        if characteristics != None:
-            product_info.append(characteristics)
-    # Дополнение JSON файла с данными
-    name_file = file_data.replace('.txt', '')
-    with open(f'JSON/{name_file}.json', 'w', encoding='UTF-8') as file:
-        json.dump(product_info, file, indent=4, ensure_ascii=False)
-    os.rename(os.getcwd() + '\\list\\' + file_data, os.getcwd() + '\\list_complete\\' + file_data)
+
+with open('all_products.json', 'w', encoding='UTF-8') as file:
+    json.dump(characteristics, file, indent=4, ensure_ascii=False)
